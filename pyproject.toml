@@ -1,0 +1,235 @@
+[tool.poetry]
+name = "django-ai-assistant"
+version = "0.1.2"
+description = "Django app to integrate with OpenAI Assistants API"
+authors = ["Vinta Software <contact@vinta.com.br>"]
+license = "MIT"
+readme = "README.md"
+keywords = [
+    "ai-agent",
+    "ai-assistant",
+    "ai",
+    "chatgpt",
+    "django",
+    "gpt",
+    "langchain",
+    "openai",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+
+    "Intended Audience :: Developers",
+    "Environment :: Web Environment",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+
+    "License :: OSI Approved :: MIT License",
+
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Framework :: Django",
+    "Framework :: Django :: 4.2",
+    "Framework :: Django :: 5.0",
+    "Framework :: Django :: 5.1",
+]
+
+[tool.poetry.urls]
+"Homepage" = "https://github.com/vintasoftware/django-ai-assistant"
+"Documentation" = "https://vintasoftware.github.io/django-ai-assistant"
+"Repository" = "https://github.com/vintasoftware/django-ai-assistant"
+"Issues" = "https://github.com/vintasoftware/django-ai-assistant/issues"
+"Changelog" = "https://vintasoftware.github.io/django-ai-assistant/latest/changelog"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+Django = ">=4.2"
+openai = "^1.48.0"
+pydantic = "^2.9.2"
+django-ninja = "^1.3.0"
+langchain = "^0.3"
+langgraph = "^0.2.28"
+langchain-openai = "^0.2.1"
+
+[tool.poetry.group.dev.dependencies]
+coverage = "^7.2.7"
+pre-commit = "^3.3.3"
+ruff = "^0.1.8"
+python-dotenv = "^1.0.1"
+pytest-django = "^4.8.0"
+ipython = "^8.24.0"
+pytest-asyncio = "^0.23.7"
+pytest-recording = "^0.13.1"
+mkdocs = "^1.6.0"
+mkdocs-material = "^9.5.27"
+pymdown-extensions = "^10.8.1"
+markdown = "^3.6"
+pygments = "^2.18.0"
+model-bakery = "^1.18.1"
+pytest-cov = "^5.0.0"
+mkdocstrings = { extras = ["python"], version = "^0.25.1" }
+mike = "^2.1.1"
+build = "^1.2.1"
+twine = "^5.0.0"
+tox = "^4.15.1"
+tox-gh = "^1.3.2"
+
+[tool.poetry.group.example.dependencies]
+django-webpack-loader = "^3.1.1"
+requests = "^2.32.2"
+lxml = "^5.3.0"
+wikipedia = "^1.4.0"
+langchain-anthropic = "^0.2.1"
+langchain-community = "^0.3.1"
+gitpython = "^3.1.43"
+scikit-learn = "^1.5.2"
+pycmarkgfm = "^1.2.1"
+
+[build-system]
+requires = ["poetry-core>=1.2.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+select = [
+    # pycodestyle
+    "E",
+    # Pyflakes
+    "F",
+    # pep8-naming
+    "N",
+    # pyupgrade
+    "UP",
+    # flake8-bugbear
+    "B",
+    # flake8-bandit
+    "S",
+    # flake8-blind-except
+    "BLE",
+    # flake8-builtins
+    "A",
+    # flake8-django
+    "DJ",
+    # isort
+    "I",
+    # flake8-logging-format
+    "G",
+    # flake8-no-pep420
+    "INP",
+    # Ruff-specific rules
+    "RUF",
+]
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+    "virtualenvs",
+    "*/migrations/*",
+]
+ignore = [
+    # Disable eradicate (commented code removal)
+    "ERA001",
+    # Disable Conflicting lint rules,
+    # see https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
+    "W191",
+    "E501",
+    "E111",
+    "E117",
+    "D206",
+    "D300",
+    "Q000",
+    "Q001",
+    "Q002",
+    "Q003",
+    "COM812",
+    "COM819",
+    "ISC001",
+    "ISC002",
+    # Allow `except Exception`:
+    "BLE001",
+    # Disable unused `noqa` directive
+    "RUF100",
+    # Disable pyupgrade UP rules that conflict with django-ninja
+    "UP006",
+    "UP035",
+    "UP037",
+    "UP040",
+]
+line-length = 100
+indent-width = 4
+target-version = "py312"
+# Allow unused variables when underscore-prefixed:
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.pycodestyle]
+ignore-overlong-task-comments = true
+
+[tool.ruff.lint.isort]
+section-order = [
+    "future",
+    "standard-library",
+    "django",
+    "third-party",
+    "first-party",
+    "local-folder",
+]
+lines-after-imports = 2
+
+[tool.ruff.lint.isort.sections]
+# Group all Django imports into a separate section.
+"django" = ["django"]
+
+[tool.ruff.per-file-ignores]
+# Ignore "E402", "F403", "F405" (import violations) in __init__.py files.
+# Ignore "S" (flake8-bandit) and "N802" (function name should be lowercase) in tests and docs.
+# Ignore "RUF" (Ruff-specific rules) and "I" (isort) in migrations.
+"__init__.py" = ["E402", "F403", "F405"]
+"**/{tests,docs}/*" = ["E402", "F403", "F405", "S", "N802"]
+"**/*test*.py" = ["E402", "F403", "F405", "S", "N802"]
+"**/{settings}/*" = ["E402", "F403", "F405"]
+"**/migrations/*" = ["RUF", "I"]
+
+[tool.coverage.run]
+branch = true
+source = ["django_ai_assistant"]
+omit = [
+    "**/venv/*",
+    "**/env/*",
+    "**/virtualenvs/*",
+    "**/node_modules/*",
+    "**/migrations/*",
+    "**/settings/*",
+    "**/tests/*",
+]
+
+[tool.coverage.xml]
+output = "coverage.xml"
+
+[tool.pyright]
+pythonVersion = "3.13"
+include = ["django_ai_assistant"]
+typeCheckingMode = "basic"
+useLibraryCodeForTypes = true
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "tests.settings"
+python_files = ["test_*.py"]

@@ -1,0 +1,273 @@
+interactions:
+- request:
+    body: '{"messages": [{"content": "You are a temperature bot. Today is 2024-06-09.",
+      "role": "system"}, {"content": "What is the temperature today in Recife?", "role":
+      "user"}], "model": "gpt-4o", "n": 1, "stream": false, "temperature": 1.0, "tools":
+      [{"type": "function", "function": {"name": "fetch_current_temperature", "description":
+      "Fetch the current temperature data for a location", "parameters": {"properties":
+      {"location": {"type": "string"}}, "required": ["location"], "type": "object"}}},
+      {"type": "function", "function": {"name": "fetch_forecast_temperature", "description":
+      "Fetch the forecast temperature data for a location", "parameters": {"type":
+      "object", "properties": {"location": {"type": "string"}, "dt_str": {"description":
+      "Date in the format ''YYYY-MM-DD''", "type": "string"}}, "required": ["location",
+      "dt_str"]}}}]}'
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      authorization:
+      - DUMMY
+      connection:
+      - keep-alive
+      content-length:
+      - '834'
+      content-type:
+      - application/json
+      host:
+      - api.openai.com
+      user-agent:
+      - OpenAI/Python
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://api.openai.com/v1/chat/completions
+  response:
+    content: "{\n  \"id\": \"chatcmpl-AEgz9DB9DxR3nsIIJ4zsMnWD4haXy\",\n  \"object\":
+      \"chat.completion\",\n  \"created\": 1728065191,\n  \"model\": \"gpt-4o-2024-08-06\",\n
+      \ \"choices\": [\n    {\n      \"index\": 0,\n      \"message\": {\n        \"role\":
+      \"assistant\",\n        \"content\": null,\n        \"tool_calls\": [\n          {\n
+      \           \"id\": \"call_mp680g1ciZRb9eaRoWZUpMWG\",\n            \"type\":
+      \"function\",\n            \"function\": {\n              \"name\": \"fetch_current_temperature\",\n
+      \             \"arguments\": \"{\\\"location\\\":\\\"Recife\\\"}\"\n            }\n
+      \         }\n        ],\n        \"refusal\": null\n      },\n      \"logprobs\":
+      null,\n      \"finish_reason\": \"tool_calls\"\n    }\n  ],\n  \"usage\": {\n
+      \   \"prompt_tokens\": 111,\n    \"completion_tokens\": 16,\n    \"total_tokens\":
+      127,\n    \"prompt_tokens_details\": {\n      \"cached_tokens\": 0\n    },\n
+      \   \"completion_tokens_details\": {\n      \"reasoning_tokens\": 0\n    }\n
+      \ },\n  \"system_fingerprint\": \"fp_e5e4913e83\"\n}\n"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      Date: Sun, 09 Jun 2024 23:39:08 GMT
+      Server: DUMMY
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      access-control-expose-headers:
+      - X-Request-ID
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: '{"messages": [{"content": "You are a temperature bot. Today is 2024-06-09.",
+      "role": "system"}, {"content": "What is the temperature today in Recife?", "role":
+      "user"}, {"content": null, "role": "assistant", "tool_calls": [{"type": "function",
+      "id": "call_mp680g1ciZRb9eaRoWZUpMWG", "function": {"name": "fetch_current_temperature",
+      "arguments": "{\"location\": \"Recife\"}"}}]}, {"content": "32 degrees Celsius",
+      "role": "tool", "tool_call_id": "call_mp680g1ciZRb9eaRoWZUpMWG"}], "model":
+      "gpt-4o", "n": 1, "stream": false, "temperature": 1.0, "tools": [{"type": "function",
+      "function": {"name": "fetch_current_temperature", "description": "Fetch the
+      current temperature data for a location", "parameters": {"properties": {"location":
+      {"type": "string"}}, "required": ["location"], "type": "object"}}}, {"type":
+      "function", "function": {"name": "fetch_forecast_temperature", "description":
+      "Fetch the forecast temperature data for a location", "parameters": {"type":
+      "object", "properties": {"location": {"type": "string"}, "dt_str": {"description":
+      "Date in the format ''YYYY-MM-DD''", "type": "string"}}, "required": ["location",
+      "dt_str"]}}}]}'
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      authorization:
+      - DUMMY
+      connection:
+      - keep-alive
+      content-length:
+      - '1145'
+      content-type:
+      - application/json
+      cookie:
+      - DUMMY
+      host:
+      - api.openai.com
+      user-agent:
+      - OpenAI/Python
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://api.openai.com/v1/chat/completions
+  response:
+    content: "{\n  \"id\": \"chatcmpl-AEgzAn98eSbe5BCydWXLETWJ2qcgv\",\n  \"object\":
+      \"chat.completion\",\n  \"created\": 1728065192,\n  \"model\": \"gpt-4o-2024-08-06\",\n
+      \ \"choices\": [\n    {\n      \"index\": 0,\n      \"message\": {\n        \"role\":
+      \"assistant\",\n        \"content\": \"The current temperature in Recife is
+      32 degrees Celsius.\",\n        \"refusal\": null\n      },\n      \"logprobs\":
+      null,\n      \"finish_reason\": \"stop\"\n    }\n  ],\n  \"usage\": {\n    \"prompt_tokens\":
+      139,\n    \"completion_tokens\": 12,\n    \"total_tokens\": 151,\n    \"prompt_tokens_details\":
+      {\n      \"cached_tokens\": 0\n    },\n    \"completion_tokens_details\": {\n
+      \     \"reasoning_tokens\": 0\n    }\n  },\n  \"system_fingerprint\": \"fp_e5e4913e83\"\n}\n"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      Date: Sun, 09 Jun 2024 23:39:08 GMT
+      Server: DUMMY
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      access-control-expose-headers:
+      - X-Request-ID
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: '{"messages": [{"content": "You are a temperature bot. Today is 2024-06-09.",
+      "role": "system"}, {"content": "What is the temperature today in Recife?", "role":
+      "user"}, {"content": null, "role": "assistant", "tool_calls": [{"type": "function",
+      "id": "call_mp680g1ciZRb9eaRoWZUpMWG", "function": {"name": "fetch_current_temperature",
+      "arguments": "{\"location\": \"Recife\"}"}}]}, {"content": "32 degrees Celsius",
+      "role": "tool", "tool_call_id": "call_mp680g1ciZRb9eaRoWZUpMWG"}, {"content":
+      "The current temperature in Recife is 32 degrees Celsius.", "role": "assistant"},
+      {"content": "What about tomorrow?", "role": "user"}], "model": "gpt-4o", "n":
+      1, "stream": false, "temperature": 1.0, "tools": [{"type": "function", "function":
+      {"name": "fetch_current_temperature", "description": "Fetch the current temperature
+      data for a location", "parameters": {"properties": {"location": {"type": "string"}},
+      "required": ["location"], "type": "object"}}}, {"type": "function", "function":
+      {"name": "fetch_forecast_temperature", "description": "Fetch the forecast temperature
+      data for a location", "parameters": {"type": "object", "properties": {"location":
+      {"type": "string"}, "dt_str": {"description": "Date in the format ''YYYY-MM-DD''",
+      "type": "string"}}, "required": ["location", "dt_str"]}}}]}'
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      authorization:
+      - DUMMY
+      connection:
+      - keep-alive
+      content-length:
+      - '1292'
+      content-type:
+      - application/json
+      host:
+      - api.openai.com
+      user-agent:
+      - OpenAI/Python
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://api.openai.com/v1/chat/completions
+  response:
+    content: "{\n  \"id\": \"chatcmpl-AEgzBghCShRXpHt6arswuiOlibksr\",\n  \"object\":
+      \"chat.completion\",\n  \"created\": 1728065193,\n  \"model\": \"gpt-4o-2024-08-06\",\n
+      \ \"choices\": [\n    {\n      \"index\": 0,\n      \"message\": {\n        \"role\":
+      \"assistant\",\n        \"content\": null,\n        \"tool_calls\": [\n          {\n
+      \           \"id\": \"call_5Y5P4y5m0VFzh5GE0RNeEkyP\",\n            \"type\":
+      \"function\",\n            \"function\": {\n              \"name\": \"fetch_forecast_temperature\",\n
+      \             \"arguments\": \"{\\\"location\\\":\\\"Recife\\\",\\\"dt_str\\\":\\\"2024-06-10\\\"}\"\n
+      \           }\n          }\n        ],\n        \"refusal\": null\n      },\n
+      \     \"logprobs\": null,\n      \"finish_reason\": \"tool_calls\"\n    }\n
+      \ ],\n  \"usage\": {\n    \"prompt_tokens\": 162,\n    \"completion_tokens\":
+      27,\n    \"total_tokens\": 189,\n    \"prompt_tokens_details\": {\n      \"cached_tokens\":
+      0\n    },\n    \"completion_tokens_details\": {\n      \"reasoning_tokens\":
+      0\n    }\n  },\n  \"system_fingerprint\": \"fp_e5e4913e83\"\n}\n"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      Date: Sun, 09 Jun 2024 23:39:08 GMT
+      Server: DUMMY
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      access-control-expose-headers:
+      - X-Request-ID
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: '{"messages": [{"content": "You are a temperature bot. Today is 2024-06-09.",
+      "role": "system"}, {"content": "What is the temperature today in Recife?", "role":
+      "user"}, {"content": null, "role": "assistant", "tool_calls": [{"type": "function",
+      "id": "call_mp680g1ciZRb9eaRoWZUpMWG", "function": {"name": "fetch_current_temperature",
+      "arguments": "{\"location\": \"Recife\"}"}}]}, {"content": "32 degrees Celsius",
+      "role": "tool", "tool_call_id": "call_mp680g1ciZRb9eaRoWZUpMWG"}, {"content":
+      "The current temperature in Recife is 32 degrees Celsius.", "role": "assistant"},
+      {"content": "What about tomorrow?", "role": "user"}, {"content": null, "role":
+      "assistant", "tool_calls": [{"type": "function", "id": "call_5Y5P4y5m0VFzh5GE0RNeEkyP",
+      "function": {"name": "fetch_forecast_temperature", "arguments": "{\"location\":
+      \"Recife\", \"dt_str\": \"2024-06-10\"}"}}]}, {"content": "35 degrees Celsius",
+      "role": "tool", "tool_call_id": "call_5Y5P4y5m0VFzh5GE0RNeEkyP"}], "model":
+      "gpt-4o", "n": 1, "stream": false, "temperature": 1.0, "tools": [{"type": "function",
+      "function": {"name": "fetch_current_temperature", "description": "Fetch the
+      current temperature data for a location", "parameters": {"properties": {"location":
+      {"type": "string"}}, "required": ["location"], "type": "object"}}}, {"type":
+      "function", "function": {"name": "fetch_forecast_temperature", "description":
+      "Fetch the forecast temperature data for a location", "parameters": {"type":
+      "object", "properties": {"location": {"type": "string"}, "dt_str": {"description":
+      "Date in the format ''YYYY-MM-DD''", "type": "string"}}, "required": ["location",
+      "dt_str"]}}}]}'
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      authorization:
+      - DUMMY
+      connection:
+      - keep-alive
+      content-length:
+      - '1632'
+      content-type:
+      - application/json
+      cookie:
+      - DUMMY
+      host:
+      - api.openai.com
+      user-agent:
+      - OpenAI/Python
+      x-stainless-retry-count:
+      - '0'
+    method: POST
+    uri: https://api.openai.com/v1/chat/completions
+  response:
+    content: "{\n  \"id\": \"chatcmpl-AEgzCNv5MYIGUAglgxEiD0FPbdNAf\",\n  \"object\":
+      \"chat.completion\",\n  \"created\": 1728065194,\n  \"model\": \"gpt-4o-2024-08-06\",\n
+      \ \"choices\": [\n    {\n      \"index\": 0,\n      \"message\": {\n        \"role\":
+      \"assistant\",\n        \"content\": \"The forecasted temperature for tomorrow
+      in Recife is 35 degrees Celsius.\",\n        \"refusal\": null\n      },\n      \"logprobs\":
+      null,\n      \"finish_reason\": \"stop\"\n    }\n  ],\n  \"usage\": {\n    \"prompt_tokens\":
+      202,\n    \"completion_tokens\": 15,\n    \"total_tokens\": 217,\n    \"prompt_tokens_details\":
+      {\n      \"cached_tokens\": 0\n    },\n    \"completion_tokens_details\": {\n
+      \     \"reasoning_tokens\": 0\n    }\n  },\n  \"system_fingerprint\": \"fp_e5e4913e83\"\n}\n"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      Date: Sun, 09 Jun 2024 23:39:08 GMT
+      Server: DUMMY
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      access-control-expose-headers:
+      - X-Request-ID
+    http_version: HTTP/1.1
+    status_code: 200
+version: 1
