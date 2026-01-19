@@ -9,6 +9,12 @@ class AIAssistantConfig(AppConfig):
     name = "django_ai_assistant"
 
     def ready(self):
+        # Register signals
+        try:
+             import django_ai_assistant.signals  # noqa: F401
+        except ImportError:
+            pass
+
         # import all ai_assistants.py files in all other apps to register the assistants:
         # TODO: recursive search for ai_assistants.py files in all apps in nested directories
 
@@ -19,3 +25,4 @@ class AIAssistantConfig(AppConfig):
                 # If the module exists but there is an error in it, we want to raise the error:
                 if importlib.util.find_spec(f"{app.name}.ai_assistants"):
                     raise
+

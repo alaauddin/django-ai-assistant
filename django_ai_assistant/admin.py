@@ -43,10 +43,10 @@ class MessageInline(admin.TabularInline):
 
 @admin.register(Thread)
 class ThreadAdmin(admin.ModelAdmin):
-    list_display = ("name", "created_at", "created_by", "updated_at")
-    search_fields = ("name",)
-    list_filter = ("created_at", "updated_at")
-    raw_id_fields = ("created_by",)
+    list_display = ("name", "assistant_id", "channel", "customer_user", "created_by", "created_at", "updated_at")
+    search_fields = ("name", "assistant_id")
+    list_filter = ("channel", "created_at", "updated_at")
+    raw_id_fields = ("created_by", "customer_user")
     inlines: ClassVar[List[Type[InlineModelAdmin]]] = [MessageInline]
 
 
@@ -58,15 +58,53 @@ class MessageAdmin(admin.ModelAdmin):
     raw_id_fields = ("thread",)
 
 
-from django_ai_assistant.models import Agent, Category, FAQ, Article
+from django_ai_assistant.models import (
+    Agent,
+    Category,
+    FAQ,
+    Article,
+    Tag,
+    Language,
+    FAQTag,
+    ArticleType,
+    CustomerUser,
+)
+
+@admin.register(CustomerUser)
+class CustomerUserAdmin(admin.ModelAdmin):
+    list_display = ("full_name", "email", "phone", "external_id", "django_user", "created_at")
+    search_fields = ("full_name", "email", "phone", "external_id", "django_user__username")
+    list_filter = ("created_at", "updated_at")
+    raw_id_fields = ("django_user",)
+
+
+@admin.register(Tag)
+class TagAdmin(admin.ModelAdmin):
+    list_display = ("name", "created_at", "updated_at")
+    search_fields = ("name",)
+
+@admin.register(Language)
+class LanguageAdmin(admin.ModelAdmin):
+    list_display = ("name", "created_at", "updated_at")
+    search_fields = ("name",)
+
+@admin.register(FAQTag)
+class FAQTagAdmin(admin.ModelAdmin):
+    list_display = ("faq", "tag", "created_at", "updated_at")
+    list_filter = ("tag", "created_at")
+
+@admin.register(ArticleType)
+class ArticleTypeAdmin(admin.ModelAdmin):
+    list_display = ("name", "created_at", "updated_at")
+    search_fields = ("name",)
 
 @admin.register(Agent)
 class AgentAdmin(admin.ModelAdmin):
-    list_display = ("name", "model", "temperature", "created_at", "updated_at")
-    search_fields = ("name", "description")
+    list_display = ("name", "display_name", "model", "temperature", "created_at", "updated_at")
+    search_fields = ("name", "display_name", "description")
     list_filter = ("created_at", "updated_at")
     fieldsets = (
-        (None, {"fields": ("name", "description")}),
+        (None, {"fields": ("name", "display_name", "description")}),
         ("Configuration", {"fields": ("instructions", "model", "temperature")}),
         ("Timestamps", {"fields": ("created_at", "updated_at"), "classes": ("collapse",)}),
     )
@@ -75,22 +113,24 @@ class AgentAdmin(admin.ModelAdmin):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ("name", "agent", "created_at", "updated_at")
+    list_display = ("name", "agent", "is_active", "created_at", "updated_at")
     search_fields = ("name", "description")
-    list_filter = ("agent",)
+    list_filter = ("agent", "is_active")
 
 
 @admin.register(FAQ)
 class FAQAdmin(admin.ModelAdmin):
-    list_display = ("question", "agent", "category", "status", "updated_at")
+    # Removed category, status. Added language, is_published, is_active
+    list_display = ("question", "agent", "language", "is_published", "is_active", "updated_at")
     search_fields = ("question", "answer")
-    list_filter = ("status", "agent", "category", "created_at")
+    list_filter = ("is_published", "is_active", "agent", "language", "created_at")
 
 
 @admin.register(Article)
 class ArticleAdmin(admin.ModelAdmin):
-    list_display = ("title", "agent", "category", "status", "updated_at")
+    # Removed status. Added category, article_type, language, is_published, is_active
+    list_display = ("title", "agent", "category", "article_type", "language", "is_published", "is_active", "updated_at")
     search_fields = ("title", "content")
-    list_filter = ("status", "agent", "category", "created_at")
+    list_filter = ("is_published", "is_active", "agent", "category", "article_type", "language", "created_at")
 
 

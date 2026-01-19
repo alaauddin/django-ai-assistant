@@ -1,45 +1,253 @@
-{% extends "demo/base.html" %}
+{% extends "demo/dashboard_base.html" %}
 
-{% block content %}
-<div class="row g-0 h-100">
-    <div class="col-md-3 sidebar p-3">
-        <h3 class="mb-3">
-            <a href="{% url 'agent_list' %}" class="text-decoration-none text-dark">&larr;</a>
-            Threads
-        </h3>
-        
-        <form method="post" action="{% url 'chat_home' assistant_id %}">
-            {% csrf_token %}
-            <input type="hidden" name="name" value="New Conversation">
-            <button type="submit" class="btn btn-primary w-100 mb-3">
-                + New Chat
-            </button>
-        </form>
+{% block extra_style %}
+<style>
+    /* Conversation Sidebar Styles (Specific to Chat) */
+    .convo-header {
+        padding: 1.5rem;
+    }
 
-        <div class="list-group">
-            {% for thread in threads %}
-            <a href="{% url 'chat_thread' assistant_id thread.id %}" 
-               class="list-group-item list-group-item-action {% if thread.id == thread_id %}active{% endif %}">
-                {{ thread.name|default:"Untitled Thread" }}
-                <small class="d-block text-muted">{{ thread.created_at|date:"M d, P" }}</small>
-            </a>
-            {% empty %}
-            <div class="text-muted text-center py-3">No threads yet.</div>
-            {% endfor %}
+    .convo-header h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 1.25rem;
+        color: var(--text-main);
+    }
+
+    .search-container {
+        position: relative;
+        margin-bottom: 1rem;
+    }
+
+    .search-input-chat {
+        width: 100%;
+        padding: 0.6rem 1rem 0.6rem 2.5rem;
+        background: var(--bg-light);
+        border: 1px solid transparent;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+
+    .search-input-chat:focus {
+        background: #fff;
+        border-color: var(--primary-orange);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+    }
+
+    .search-icon-chat {
+        position: absolute;
+        left: 0.8rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        pointer-events: none;
+    }
+
+    .filter-dropdown-chat {
+        width: 100%;
+        padding: 0.6rem 1rem;
+        background: #fff;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        font-size: 0.9rem;
+        color: var(--text-main);
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .convo-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0 0.75rem;
+    }
+
+    .convo-item {
+        display: flex;
+        gap: 1rem;
+        padding: 1rem;
+        border-radius: 14px;
+        text-decoration: none;
+        color: var(--text-main);
+        transition: all 0.2s;
+        margin-bottom: 0.5rem;
+        border: 1px solid transparent;
+    }
+
+    .convo-item:hover { background: var(--bg-light); }
+
+    .convo-item.active {
+        background: #fff;
+        border-color: var(--border-color);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    }
+
+    .convo-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: #e5e7eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: #fff;
+        flex-shrink: 0;
+        position: relative;
+    }
+
+    .status-dot {
+        position: absolute;
+        bottom: 2px;
+        right: 2px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        background: #10b981;
+    }
+
+    .convo-info { flex: 1; min-width: 0; }
+
+    .convo-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.25rem;
+    }
+
+    .convo-name {
+        font-weight: 700;
+        font-size: 0.95rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .convo-time { font-size: 0.75rem; color: var(--text-muted); }
+
+    .convo-badges { display: flex; gap: 0.4rem; margin-bottom: 0.4rem; }
+
+    .badge-pill-chat {
+        font-size: 0.65rem;
+        padding: 0.1rem 0.6rem;
+        border-radius: 100px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .badge-active { background: #d1fae5; color: #065f46; }
+    .badge-ai { background: #dbeafe; color: #1e40af; }
+    .badge-pending { background: #fef3c7; color: #92400e; }
+
+    .convo-preview {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .empty-state-full {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-muted);
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .avatar-1 { background: #ec4899; }
+    .avatar-2 { background: #3b82f6; }
+    .avatar-3 { background: #10b981; }
+    .avatar-4 { background: #8b5cf6; }
+    .avatar-5 { background: #ef4444; }
+
+    .convo-list::-webkit-scrollbar { width: 4px; }
+    .convo-list::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
+</style>
+{% endblock %}
+
+{% block sub_sidebar %}
+<aside class="sub-sidebar">
+    <div class="convo-header">
+        <h2>{{ page_title|default:"Chats" }}</h2>
+        <div class="search-container">
+            <svg class="search-icon-chat" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" class="search-input-chat" placeholder="Search conversations...">
+        </div>
+        <div class="filter-dropdown-chat">
+            <span>All Chats</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </div>
     </div>
 
-    <div class="col-md-9 p-0">
-        <div class="chat-container h-100 rounded-0 shadow-none">
-            {% block chat_area %}
-            <div class="d-flex align-items-center justify-content-center h-100 bg-light">
-                <div class="text-center text-muted">
-                    <h3>Welcome to {{ assistant_id }}</h3>
-                    <p>Select a thread or start a new conversation.</p>
+    <div class="convo-list">
+        {% for thread in threads %}
+        <a href="{% if thread.channel == 'whatsapp' %}{% url 'whatsapp_chat_thread' assistant_id thread.id %}{% else %}{% url 'live_chat_thread' assistant_id thread.id %}{% endif %}" 
+           class="convo-item {% if thread.id == thread_id %}active{% endif %}">
+            <div class="convo-avatar avatar-{{ forloop.counter|add:thread.id|slice:":1"|default:"1" }}">
+                {{ thread.name|slice:":1"|upper|default:"U" }}
+                <div class="status-dot"></div>
+            </div>
+            <div class="convo-info">
+                <div class="convo-top">
+                    <span class="convo-name">{{ thread.name|default:"Untitled Conversation" }}</span>
+                    <span class="convo-time">{{ thread.updated_at|date:"g:i A" }}</span>
+                </div>
+                <div class="convo-badges">
+                    {% if thread.is_human_handoff %}
+                        <span class="badge-pill-chat" style="background: #fee2e2; color: #991b1b; border: 1px solid #fecaca;">SUPPORT</span>
+                    {% endif %}
+                    <span class="badge-pill-chat badge-active">Active</span>
+                    {% if thread.messages.count > 0 %}
+                        <span class="badge-pill-chat badge-ai">AI</span>
+                    {% else %}
+                        <span class="badge-pill-chat badge-pending">Pending</span>
+                    {% endif %}
+                </div>
+                <div class="convo-preview">
+                    {% with last_msg=thread.get_messages|last %}
+                        {{ last_msg.content|default:"No messages yet..." }}
+                    {% endwith %}
                 </div>
             </div>
-            {% endblock %}
+        </a>
+        {% empty %}
+        <div class="text-center py-5 text-muted">
+            <p>No {{ active_channel|title }} threads found.</p>
+            <form method="post" action="{% url 'chat_home' assistant_id %}">
+                {% csrf_token %}
+                <input type="hidden" name="name" value="New {{ active_channel|title }} Chat">
+                <input type="hidden" name="channel" value="{{ active_channel }}">
+                <button type="submit" class="btn btn-primary rounded-pill mt-2">Start a New Chat</button>
+            </form>
         </div>
+        {% endfor %}
     </div>
-</div>
+</aside>
+{% endblock %}
+
+{% block main_content %}
+    {% block chat_area %}
+        <div class="empty-state-full">
+            <div style="font-size: 4rem; margin-bottom: 1.5rem;">👋</div>
+            <h1 class="fw-bold mb-3">Welcome to your {{ page_title|default:"Chat" }}</h1>
+            <p class="lead mb-4">Select a conversation from the sidebar to view details,<br>or start a new one to begin assisting your customers.</p>
+            
+            <form method="post" action="{% url 'chat_home' assistant_id %}">
+                {% csrf_token %}
+                <input type="hidden" name="name" value="New Conversation">
+                <input type="hidden" name="channel" value="{{ active_channel }}">
+                <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 shadow-sm">
+                    Start Fresh Conversation
+                </button>
+            </form>
+        </div>
+    {% endblock %}
 {% endblock %}

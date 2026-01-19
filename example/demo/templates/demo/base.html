@@ -22,6 +22,12 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
         <div class="container">
             <a class="navbar-brand" href="{% url 'agent_list' %}">AI Assistant Demo</a>
+            <div class="navbar-nav">
+                <a class="nav-link" href="{% url 'agent_list' %}">Agents</a>
+                {% if assistant_id %}
+                <a class="nav-link" href="{% url 'knowledge_base' assistant_id %}">Knowledge Base</a>
+                {% endif %}
+            </div>
         </div>
     </nav>
 

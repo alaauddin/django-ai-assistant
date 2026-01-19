@@ -55,14 +55,31 @@ def get_assistant_cls(
         # The class name is the capitalized assistant_id
         class_name = "".join(x.capitalize() or "_" for x in assistant_id.split("_")) + "Assistant"
         
+        # Append instruction to encourage tool usage
+        kb_instruction = (
+            "\n\nIMPORTANT: You have access to a private knowledge base containing specific details "
+            "about this organization, its policies, and operations. "
+            "Before answering ANY user question, you MUST use the `search_knowledge_base` tool "
+            "to check for relevant information. "
+            "Do not answer based on your general training data if the answer might be specific to this organization."
+        )
+        
         attrs = {
             "id": agent.name,
             "name": agent.name,
-            "instructions": agent.instructions,
+            "instructions": agent.instructions + kb_instruction,
             "model": agent.model,
             "temperature": agent.temperature,
             "__module__": "django_ai_assistant.dynamic_agents",  # Fake module to avoid pickling issues?
         }
+        
+        def get_tools(self):
+            tools = AIAssistant.get_tools(self)
+            from django_ai_assistant.tools.knowledge_base import KnowledgeBaseTool
+            return list(tools) + [KnowledgeBaseTool(agent_id=self.id)]
+
+        attrs["get_tools"] = get_tools
+
         
         # This triggers __init_subclass__ which registers the class
         assistant_cls = type(class_name, (AIAssistant,), attrs)
@@ -140,6 +157,8 @@ def create_message(
     user: Any,
     content: Any,
     request: HttpRequest | None = None,
+    skip_ai: bool = False,
+    sender_type: str | None = None,
 ) -> dict:
     """Create a message in a thread, and right after runs the assistant to get the AI response.\n
     Uses `AI_ASSISTANT_CAN_RUN_ASSISTANT_FN` permission to check if user can run the assistant.\n
@@ -151,9 +170,12 @@ def create_message(
         user (Any): Current user
         content (Any): Message content, usually a string
         request (HttpRequest | None): Current request, if any
+        skip_ai (bool): If True, only the human message is created and saved, skipping the AI run.
+        sender_type (str | None): Explicit sender type (ai, customer, support, anonymous). If provided, overrides auto-detection.
     Returns:
         dict: The output of the assistant,
             structured like `{"output": "assistant response", "history": ...}`
+            If `skip_ai=True`, it returns `{"output": None, "history": []}`.
     Raises:
         AIUserNotAllowedError: If user is not allowed to create messages in the thread
     """
@@ -161,6 +183,34 @@ def create_message(
 
     if not can_create_message(thread=thread, user=user, request=request):
         raise AIUserNotAllowedError("User is not allowed to create messages in this thread")
+
+    if skip_ai:
+        from langchain_core.messages import HumanMessage
+        from django_ai_assistant.helpers.django_messages import save_django_messages
+        from django_ai_assistant.models import MessageSenderType, Message as DjangoMessage
+        
+        msg = HumanMessage(content=content)
+        saved_messages = save_django_messages([msg], thread)
+        
+        # Determine sender type based on context
+        if saved_messages:
+            # Use explicit sender_type if provided
+            if sender_type:
+                final_sender_type = sender_type
+            else:
+                # Auto-detect based on authentication
+                final_sender_type = MessageSenderType.ANONYMOUS
+                if user and user.is_authenticated:
+                    # Check if this is from support dashboard (handoff context)
+                    if thread.is_human_handoff:
+                        final_sender_type = MessageSenderType.SUPPORT
+                    else:
+                        final_sender_type = MessageSenderType.CUSTOMER
+            
+            # Update sender_type for the created message
+            DjangoMessage.objects.filter(id=saved_messages[0].id).update(sender_type=final_sender_type)
+        
+        return {"output": None, "history": []}
 
     # TODO: Check if we can separate the message creation from the invoke
     assistant = assistant_cls(user=user, request=request)
@@ -233,14 +283,18 @@ def get_threads(
     and returns only the ones the user can see.
 
     Args:
-        user (Any): Current user
+        user (Any): Current user. If None, returns all threads (for staff dashboard).
         assistant_id (str | None): Assistant ID to filter threads by.
             If empty or None, all threads for the user are returned.
         request (HttpRequest | None): Current request, if any
     Returns:
         list[Thread]: List of thread model instances
     """
-    threads = Thread.objects.filter(created_by=user)
+    # If user is None (staff dashboard), get all threads
+    if user is None:
+        threads = Thread.objects.all()
+    else:
+        threads = Thread.objects.filter(created_by=user)
 
     if assistant_id:
         threads = threads.filter(assistant_id=assistant_id)

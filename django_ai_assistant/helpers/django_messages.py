@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 from django.db import transaction
 
 from langchain_core.messages import (
+    AIMessage,
     BaseMessage,
     message_to_dict,
 )
@@ -14,7 +15,11 @@ if TYPE_CHECKING:
 
 
 @transaction.atomic
-def save_django_messages(messages: list[BaseMessage], thread: "Thread") -> list["DjangoMessage"]:
+def save_django_messages(
+    messages: list[BaseMessage], 
+    thread: "Thread",
+    sender_type: str | None = None
+) -> list["DjangoMessage"]:
     """
     Save a list of messages to the Django database.
     Note: Changes the message objects in place by changing each message.id to the Django ID.
@@ -22,9 +27,10 @@ def save_django_messages(messages: list[BaseMessage], thread: "Thread") -> list[
     Args:
         messages (list[BaseMessage]): The list of messages to save.
         thread (Thread): The thread to save the messages to.
+        sender_type (str | None): The sender type for the messages. If None, auto-determined.
     """
 
-    from django_ai_assistant.models import Message as DjangoMessage
+    from django_ai_assistant.models import Message as DjangoMessage, MessageSenderType
 
     existing_message_ids = [
         str(i)
@@ -35,9 +41,23 @@ def save_django_messages(messages: list[BaseMessage], thread: "Thread") -> list[
 
     messages_to_create = [m for m in messages if m.id not in existing_message_ids]
 
-    created_messages = DjangoMessage.objects.bulk_create(
-        [DjangoMessage(thread=thread, message={}) for _ in messages_to_create]
-    )
+    # Auto-determine sender type if not provided
+    created_message_objects = []
+    for msg in messages_to_create:
+        # Determine sender type
+        if sender_type:
+            msg_sender_type = sender_type
+        elif isinstance(msg, AIMessage):
+            msg_sender_type = MessageSenderType.AI
+        else:
+            # Default to ANONYMOUS for human messages if not specified
+            msg_sender_type = MessageSenderType.ANONYMOUS
+        
+        created_message_objects.append(
+            DjangoMessage(thread=thread, message={}, sender_type=msg_sender_type)
+        )
+
+    created_messages = DjangoMessage.objects.bulk_create(created_message_objects)
 
     # Update langchain message IDs with Django message IDs
     for idx, created_message in enumerate(created_messages):

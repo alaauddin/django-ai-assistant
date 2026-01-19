@@ -2,43 +2,254 @@
 {% load markdown %}
 
 {% block chat_area %}
-<div class="d-flex flex-column h-100">
-    <div class="chat-header p-3 border-bottom bg-white d-flex justify-content-between align-items-center">
-        <h5 class="m-0">{{ thread.name|default:"Untitled Conversation" }}</h5>
-        <span class="badge bg-secondary">{{ assistant_id }}</span>
-    </div>
+<style>
+    .chat-wrapper {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        background: #fff;
+    }
 
-    <div class="chat-messages p-3" id="messages-list">
-        {% if messages %}
-            {% for message in messages %}
-            <div class="alert alert-warning">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
+    /* Thread Header */
+    .thread-header {
+        padding: 1rem 2rem;
+        background: #fff;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 10;
+        min-height: 80px;
+    }
 
+    .header-user-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .header-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: #3b82f6;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .user-details h5 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.05rem;
+        color: var(--text-main);
+    }
+
+    .online-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+
+    .status-pulse {
+        width: 8px;
+        height: 8px;
+        background: #10b981;
+        border-radius: 50%;
+        box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0px rgba(16, 185, 129, 0.4); }
+        70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+        100% { box-shadow: 0 0 0 0px rgba(16, 185, 129, 0); }
+    }
+
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .btn-upgrade {
+        background: #fff4f0;
+        color: var(--primary-orange);
+        border: 1px solid rgba(255, 107, 53, 0.2);
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+
+    /* Message Area */
+    .convo-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 2.5rem;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    .msg-group {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        position: relative;
+    }
+
+    .msg-group.human { align-items: flex-end; }
+    .msg-group.ai { align-items: flex-start; }
+
+    .msg-bubble {
+        max-width: 65%;
+        padding: 1rem 1.25rem;
+        border-radius: 18px;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        position: relative;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .ai .msg-bubble {
+        background: #f3f4f6;
+        color: var(--text-main);
+        border-bottom-left-radius: 4px;
+    }
+
+    .human .msg-bubble {
+        background: #fff;
+        color: var(--text-main);
+        border: 1px solid var(--border-color);
+        border-bottom-right-radius: 4px;
+    }
+
+    .msg-time {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-top: 0.5rem;
+    }
+
+    /* Input Area */
+    .chat-input-toolbar {
+        padding: 1.5rem 2.5rem;
+        border-top: 1px solid var(--border-color);
+        background: #fff;
+    }
+
+    .input-pill {
+        background: var(--bg-light);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .input-pill input {
+        flex: 1;
+        border: none;
+        background: transparent;
+        padding: 0.6rem 1rem;
+        font-size: 0.95rem;
+    }
+
+    .input-pill input:focus { outline: none; }
+
+    .btn-send-convo {
+        background: var(--primary-orange);
+        color: #fff;
+        border: none;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.2s;
+        box-shadow: 0 4px 10px rgba(255, 107, 53, 0.2);
+    }
+
+    .btn-send-convo:hover {
+        transform: scale(1.05);
+        background: #e55a2b;
+    }
+</style>
+
+<div class="chat-wrapper">
+    <header class="thread-header">
+        <div class="header-user-info">
+            <div class="header-avatar avatar-{{ thread.id|slice:":1"|default:"2" }}">
+                {{ thread.name|slice:":1"|upper|default:"U" }}
+            </div>
+            <div class="user-details">
+                <div class="d-flex align-items-center gap-2">
+                    <h5>{{ thread.name|default:"Untitled Conversation" }}</h5>
+                    <span class="badge rounded-pill bg-light text-primary border px-2 py-1" style="font-size: 0.65rem;">AI</span>
+                </div>
+                <div class="online-indicator">
+                    <div class="status-pulse"></div>
+                    <span>Online</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="header-actions">
+            <a href="#" class="btn-upgrade">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                Upgrade
+            </a>
+            <div class="d-flex gap-2 text-muted px-2 border-start ms-2">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+            </div>
+        </div>
+    </header>
+
+    <div class="convo-messages" id="messages-list">
         {% for message in thread_messages %}
-            <div class="message {% if message.type == 'human' %}human{% else %}ai{% endif %}">
-                <strong>{% if message.type == 'human' %}You{% else %}{{ assistant_id|title }}{% endif %}</strong>
-                <div class="mt-1">
+            {% comment %}
+            AI and Support messages: LEFT side (gray background)
+            Customer and Anonymous messages: RIGHT side (white with border)
+            {% endcomment %}
+            <div class="msg-group {% if message.sender_type == 'customer' or message.sender_type == 'anonymous' %}human{% else %}ai{% endif %}">
+                <div class="msg-bubble">
                     {{ message.content|markdown }}
                 </div>
+                <div class="msg-time">{{ thread.updated_at|date:"g:i A" }}</div>
             </div>
         {% endfor %}
     </div>
 
-    <div class="chat-input p-3 border-top bg-white">
-        <form method="post" action="{% url 'chat_thread' assistant_id thread_id %}" class="d-flex gap-2">
+    <div class="chat-input-toolbar">
+        <form method="post" action="{% if thread.channel == 'whatsapp' %}{% url 'whatsapp_chat_thread' assistant_id thread_id %}{% else %}{% url 'live_chat_thread' assistant_id thread_id %}{% endif %}">
             {% csrf_token %}
-            <input type="text" name="content" class="form-control" placeholder="Type your message..." required autofocus autocomplete="off">
-            <button type="submit" class="btn btn-primary">Send</button>
+            <div class="input-pill">
+                <svg class="text-muted ms-2" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                <input type="text" name="content" placeholder="Type a message..." required autofocus autocomplete="off">
+                <button type="submit" class="btn-send-convo">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                </button>
+            </div>
         </form>
     </div>
 </div>
 
 <script>
-    // Scroll to bottom of chat
-    const messageList = document.getElementById('messages-list');
-    if (messageList) {
-        messageList.scrollTop = messageList.scrollHeight;
-    }
+    const msgList = document.getElementById('messages-list');
+    const scrollDown = () => { msgList.scrollTop = msgList.scrollHeight; };
+    scrollDown();
+    new MutationObserver(scrollDown).observe(msgList, { childList: true });
 </script>
 {% endblock %}

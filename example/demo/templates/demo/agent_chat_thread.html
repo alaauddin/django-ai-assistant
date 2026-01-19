@@ -1,0 +1,263 @@
+{% extends "demo/base.html" %}
+
+{% block content %}
+<style>
+    :root {
+        --primary-orange: #ff6b35;
+        --bg-light: #fbfbfb;
+        --text-main: #111827;
+        --message-ai-bg: #f3f4f6;
+        --message-human-bg: linear-gradient(135deg, #ff6b35 0%, #ff8c5f 100%);
+    }
+
+    body {
+        background-color: var(--bg-light);
+        font-family: 'Inter', system-ui, sans-serif;
+    }
+
+    .standalone-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        height: calc(100vh - 120px);
+        background: #fff;
+        border-radius: 24px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border: 1px solid #f0f0f0;
+    }
+
+    .chat-header {
+        padding: 1.25rem 2rem;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #fff;
+    }
+
+    .agent-meta {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .agent-avatar {
+        width: 44px;
+        height: 44px;
+        background: #fff4f0;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .agent-info h2 {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 700;
+    }
+
+    .status-badge {
+        font-size: 0.75rem;
+        color: #10b981;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .status-dot-pulse {
+        width: 8px;
+        height: 8px;
+        background: #10b981;
+        border-radius: 50%;
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    .messages-area {
+        flex: 1;
+        overflow-y: auto;
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        background: #fdfdfd;
+    }
+
+    .message-row {
+        display: flex;
+        flex-direction: column;
+        max-width: 80%;
+    }
+
+    .message-row.human { align-self: flex-end; align-items: flex-end; }
+    .message-row.ai { align-self: flex-start; align-items: flex-start; }
+
+    .bubble {
+        padding: 0.85rem 1.25rem;
+        border-radius: 18px;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        position: relative;
+    }
+
+    .ai .bubble {
+        background: var(--message-ai-bg);
+        color: var(--text-main);
+        border-bottom-left-radius: 4px;
+    }
+
+    .human .bubble {
+        background: var(--message-human-bg);
+        color: #fff;
+        border-bottom-right-radius: 4px;
+    }
+
+    .msg-timestamp {
+        font-size: 0.7rem;
+        color: #adb5bd;
+        margin-top: 0.4rem;
+    }
+
+    .input-area {
+        padding: 1.5rem 2rem;
+        border-top: 1px solid #f0f0f0;
+        background: #fff;
+    }
+
+    .input-wrapper {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        background: #f8f9fa;
+        padding: 0.5rem;
+        border-radius: 16px;
+        border: 1px solid #eee;
+    }
+
+    .chat-input {
+        flex: 1;
+        border: none;
+        background: none;
+        padding: 0.6rem 1rem;
+        font-size: 0.95rem;
+    }
+
+    .chat-input:focus { outline: none; }
+
+    .send-btn {
+        width: 40px;
+        height: 40px;
+        background: var(--primary-orange);
+        border: none;
+        border-radius: 12px;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.2s;
+    }
+
+    .send-btn:hover { transform: scale(1.05); }
+
+    .btn-handoff {
+        background: #fff;
+        border: 1px solid #f44336;
+        color: #f44336;
+        padding: 0.4rem 1rem;
+        border-radius: 100px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+
+    .btn-handoff:hover {
+        background: #f44336;
+        color: #fff;
+    }
+
+    .handoff-notif {
+        background: #fffde7;
+        padding: 0.75rem 1.5rem;
+        text-align: center;
+        font-size: 0.85rem;
+        color: #856404;
+        border-bottom: 1px solid #ffeeba;
+    }
+</style>
+
+<div class="standalone-container">
+    {% if thread.is_human_handoff %}
+    <div class="handoff-notif">
+        👋 A human support agent has been notified and will join shortly.
+    </div>
+    {% endif %}
+
+    <div class="chat-header">
+        <div class="agent-meta">
+            <div class="agent-avatar">🤖</div>
+            <div class="agent-info">
+                <h2>{{ agent.display_name|default:agent.name }}</h2>
+                <div class="status-badge">
+                    <div class="status-dot-pulse"></div>
+                    Online
+                </div>
+            </div>
+        </div>
+        <div>
+            {% if not thread.is_human_handoff %}
+            <form method="post" action="{% url 'thread_handoff' assistant_id thread.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn-handoff">Talk to Human</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="messages-area" id="messages-container">
+        {% for message in thread_messages %}
+        {% comment %}
+        AI and Support messages: LEFT side (gray background)
+        Customer and Anonymous messages: RIGHT side (orange gradient)
+        {% endcomment %}
+        <div class="message-row {% if message.sender_type == 'customer' or message.sender_type == 'anonymous' %}human{% else %}ai{% endif %}">
+            <div class="bubble">
+                {{ message.content }}
+            </div>
+            <div class="msg-timestamp">{{ message.created_at|date:"g:i A" }}</div>
+        </div>
+        {% empty %}
+        <div class="text-center py-5 text-muted">
+            <p>Start chatting with {{ agent.display_name|default:agent.name }} below!</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="input-area">
+        <form method="post" action="{% url 'agent_chat_thread' assistant_id thread.id %}">
+            {% csrf_token %}
+            <div class="input-wrapper">
+                <input type="text" name="content" class="chat-input" placeholder="Type your message..." required autocomplete="off">
+                <button type="submit" class="send-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const container = document.getElementById('messages-container');
+    container.scrollTop = container.scrollHeight;
+</script>
+{% endblock %}

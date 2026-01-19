@@ -130,6 +130,10 @@ def allow_all(**kwargs) -> bool:
 
 
 def owns_thread(user: Any, thread: Thread, **kwargs) -> bool:
+    # Allow anonymous users (None) to interact with threads
+    if user is None:
+        return True
+    
     if user.is_superuser:
         return True
 

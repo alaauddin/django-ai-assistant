@@ -1,0 +1,439 @@
+{% extends "demo/dashboard_base.html" %}
+
+{% block extra_style %}
+<style>
+    /* Knowledge Base Specific Styles */
+    .ai-kb-card {
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+    }
+
+    .card-title-section {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .card-title-section h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-main);
+    }
+
+    .spark-icon { color: var(--primary-orange); }
+
+    .card-subtitle {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        margin-bottom: 2rem;
+    }
+
+    .stats-grid-row {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 1rem;
+    }
+
+    .stat-p-card {
+        background: var(--peach-bg);
+        border: 1px solid rgba(255, 107, 53, 0.05);
+        border-radius: 12px;
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 100px;
+    }
+
+    .stat-p-header {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .stat-p-value {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: #111;
+        margin-top: 0.5rem;
+    }
+
+    .kb-tabs-row {
+        display: flex;
+        gap: 0.5rem;
+        background: #f3f4f6;
+        padding: 0.3rem;
+        border-radius: 12px;
+        width: fit-content;
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .kb-tab-btn {
+        padding: 0.6rem 2rem;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-decoration: none;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+    }
+
+    .kb-tab-btn:hover { background: #fff; color: var(--text-main); }
+
+    .kb-tab-btn.active {
+        background: #fff;
+        color: var(--text-main);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        position: relative;
+    }
+
+    .kb-tab-btn.active::after {
+        content: '';
+        position: absolute;
+        bottom: -4px;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--primary-orange);
+        border-radius: 2px;
+    }
+
+    .kb-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        gap: 1rem;
+    }
+
+    .search-pill-kb {
+        flex: 1;
+        background: #fff;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        padding: 0 1rem;
+    }
+
+    .search-pill-kb input {
+        border: none;
+        background: none;
+        padding: 0.7rem 0.5rem;
+        width: 100%;
+        font-size: 0.9rem;
+    }
+
+    .search-pill-kb input:focus { outline: none; }
+
+    .status-dropdown-kb {
+        background: #fff;
+        border: 1px solid var(--border-color);
+        padding: 0.7rem 1.25rem;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        color: var(--text-main);
+        min-width: 160px;
+    }
+
+    .btn-add-p {
+        background: var(--primary-orange);
+        color: #fff;
+        border: none;
+        padding: 0.7rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .table-p-card {
+        background: #fff;
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.01);
+    }
+
+    .table-p {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .table-p th {
+        background: #fafafa;
+        padding: 1rem 1.5rem;
+        color: var(--text-muted);
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .table-p td {
+        padding: 1.25rem 1.5rem;
+        font-size: 0.875rem;
+        border-bottom: 1px solid var(--border-color);
+        vertical-align: middle;
+    }
+
+    .row-p:last-child td { border-bottom: none; }
+
+    .badge-pill-p {
+        padding: 0.3rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .badge-p-active { background: #e6f7ef; color: #10b981; }
+
+    /* KB Sidebar Overrides */
+    .kb-inner-sidebar {
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .sidebar-inner-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .sidebar-inner-header h2 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+
+    .sidebar-inner-header p {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .sidebar-inner-section {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .sidebar-inner-title {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+    }
+
+    .inner-stats-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .inner-stat-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.6rem 0.75rem;
+        background: var(--bg-light);
+        border-radius: 8px;
+    }
+
+    .inner-stat-label { font-size: 0.8rem; font-weight: 500; }
+    .inner-stat-value { font-weight: 700; color: var(--primary-orange); }
+</style>
+{% endblock %}
+
+{% block sub_sidebar %}
+<aside class="sub-sidebar">
+    <div class="kb-inner-sidebar">
+        <div class="sidebar-inner-header">
+            <h2>Knowledge</h2>
+            <p>{{ agent.display_name|default:agent.name }}</p>
+        </div>
+
+        <div class="sidebar-inner-section">
+            <h4 class="sidebar-inner-title">Asset Overview</h4>
+            <div class="inner-stats-list">
+                <div class="inner-stat-item">
+                    <span class="inner-stat-label">Articles</span>
+                    <span class="inner-stat-value">{{ stats.articles }}</span>
+                </div>
+                <div class="inner-stat-item">
+                    <span class="inner-stat-label">FAQs</span>
+                    <span class="inner-stat-value">{{ stats.faqs }}</span>
+                </div>
+                <div class="inner-stat-item">
+                    <span class="inner-stat-label">Categories</span>
+                    <span class="inner-stat-value">{{ stats.categories }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar-inner-section">
+            <h4 class="sidebar-inner-title">Quick Actions</h4>
+            <div class="d-grid gap-2">
+                <a href="/admin/django_ai_assistant/article/add/?agent={{ agent.id }}" class="btn btn-outline-dark btn-sm rounded-pill text-start px-3">
+                    ✍️ Create Article
+                </a>
+                <a href="/admin/django_ai_assistant/faq/add/?agent={{ agent.id }}" class="btn btn-outline-dark btn-sm rounded-pill text-start px-3">
+                    ❓ New FAQ
+                </a>
+                <a href="/admin/django_ai_assistant/category/add/?agent={{ agent.id }}" class="btn btn-outline-dark btn-sm rounded-pill text-start px-3">
+                    📁 New Category
+                </a>
+            </div>
+        </div>
+    </div>
+</aside>
+{% endblock %}
+
+{% block main_content %}
+<div style="padding: 2rem; max-width: 1400px; margin: 0 auto; width: 100%;">
+    <!-- Header Card -->
+    <div class="ai-kb-card">
+        <div class="card-title-section">
+            <svg class="spark-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+            <h2>AI Knowledge</h2>
+        </div>
+        <p class="card-subtitle">To answer customer questions, Help.center is using:</p>
+
+        <div class="stats-grid-row">
+            <div class="stat-p-card">
+                <div class="stat-p-header"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg> Categories</div>
+                <div class="stat-p-value">{{ stats.categories }}</div>
+            </div>
+            <div class="stat-p-card">
+                <div class="stat-p-header"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Articles</div>
+                <div class="stat-p-value">{{ stats.articles }}</div>
+            </div>
+            <div class="stat-p-card">
+                <div class="stat-p-header"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> AI FAQs</div>
+                <div class="stat-p-value">{{ stats.faqs }}</div>
+            </div>
+            <div class="stat-p-card">
+                <div class="stat-p-header"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> Tickets</div>
+                <div class="stat-p-value">{{ stats.tickets }}</div>
+            </div>
+            <div class="stat-p-card">
+                <div class="stat-p-header"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg> External sites</div>
+                <div class="stat-p-value">{{ stats.external_sites }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="kb-tabs-row">
+        <a href="?tab=categories" class="kb-tab-btn {% if active_tab == 'categories' %}active{% endif %}">Categories</a>
+        <a href="?tab=faqs" class="kb-tab-btn {% if active_tab == 'faqs' %}active{% endif %}">FAQs</a>
+        <a href="?tab=articles" class="kb-tab-btn {% if active_tab == 'articles' %}active{% endif %}">Articles</a>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="kb-toolbar">
+        <div class="search-pill-kb">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" placeholder="Search {{ active_tab }}...">
+        </div>
+        <select class="status-dropdown-kb">
+            <option>All Status</option>
+        </select>
+        <a href="/admin/django_ai_assistant/{{ active_tab|slice:":-1" }}/add/?agent={{ agent.id }}" class="btn-add-p">
+            + Add {{ active_tab|slice:":-1"|title }}
+        </a>
+    </div>
+
+    <!-- Table -->
+    <div class="table-p-card">
+        <table class="table-p">
+            <thead>
+                {% if active_tab == 'articles' %}
+                <tr>
+                    <th>Article Title</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Language</th>
+                    <th>Date Created</th>
+                    <th>Date Updated</th>
+                    <th></th>
+                </tr>
+                {% elif active_tab == 'faqs' %}
+                <tr>
+                    <th>Question</th>
+                    <th>Answer Preview</th>
+                    <th>Status</th>
+                    <th>Language</th>
+                    <th>Date Created</th>
+                    <th></th>
+                </tr>
+                {% elif active_tab == 'categories' %}
+                <tr>
+                    <th>Category Name</th>
+                    <th>Description</th>
+                    <th>Order</th>
+                    <th>Status</th>
+                    <th>Organization</th>
+                    <th>Date Created</th>
+                    <th>Date Updated</th>
+                    <th></th>
+                </tr>
+                {% endif %}
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr class="row-p">
+                    {% if active_tab == 'articles' %}
+                    <td><strong>{{ item.title }}</strong></td>
+                    <td class="text-muted">{{ item.content|truncatechars:30 }}</td>
+                    <td><span class="badge-pill-p badge-p-active">Active</span></td>
+                    <td>{{ item.language.name }}</td>
+                    <td>{{ item.created_at|date:"Y-m-d" }}</td>
+                    <td>{{ item.updated_at|date:"Y-m-d" }}</td>
+                    <td class="text-end"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg></td>
+                    {% elif active_tab == 'faqs' %}
+                    <td><strong>{{ item.question }}</strong></td>
+                    <td class="text-muted">{{ item.answer|truncatechars:30 }}</td>
+                    <td><span class="badge-pill-p badge-p-active">Active</span></td>
+                    <td>{{ item.language.name }}</td>
+                    <td>{{ item.created_at|date:"Y-m-d" }}</td>
+                    <td class="text-end"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg></td>
+                    {% elif active_tab == 'categories' %}
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div style="width: 6px; height: 6px; border-radius: 50%; background: var(--primary-orange);"></div>
+                            <strong>{{ item.name }}</strong>
+                        </div>
+                    </td>
+                    <td class="text-muted">{{ item.description|default:"No description"|truncatechars:40 }}</td>
+                    <td>-</td>
+                    <td><span class="badge-pill-p badge-p-active">Active</span></td>
+                    <td>{{ agent.name }}</td>
+                    <td>{{ item.created_at|date:"Y-m-d" }}</td>
+                    <td>{{ item.updated_at|date:"Y-m-d" }}</td>
+                    <td class="text-end"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg></td>
+                    {% endif %}
+                </tr>
+                {% empty %}
+                <tr><td colspan="10" class="text-center py-5 text-muted">No {{ active_tab }} found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

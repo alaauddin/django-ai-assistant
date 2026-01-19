@@ -1,0 +1,66 @@
+{% extends "demo/base.html" %}
+
+{% block content %}
+<style>
+    :root {
+        --primary-orange: #ff6b35;
+    }
+
+    .landing-container {
+        max-width: 600px;
+        margin: 5rem auto;
+        text-align: center;
+        background: #fff;
+        padding: 4rem 2rem;
+        border-radius: 32px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.03);
+    }
+
+    .agent-hero-avatar {
+        width: 100px;
+        height: 100px;
+        background: #fff4f0;
+        border-radius: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        margin: 0 auto 2rem;
+    }
+
+    h1 { font-weight: 800; font-size: 2rem; margin-bottom: 1rem; }
+    p { color: #6c757d; font-size: 1.1rem; margin-bottom: 2.5rem; }
+
+    .btn-start {
+        background: var(--primary-orange);
+        color: #fff;
+        border: none;
+        padding: 1rem 3rem;
+        border-radius: 100px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        transition: all 0.2s;
+        box-shadow: 0 8px 15px rgba(255, 107, 53, 0.2);
+        display: inline-block;
+        text-decoration: none;
+    }
+
+    .btn-start:hover {
+        transform: translateY(-2px);
+        background: #e55a2b;
+        color: #fff;
+    }
+</style>
+
+<div class="landing-container">
+    <div class="agent-hero-avatar">🤖</div>
+    <h1>Chat with {{ agent.display_name|default:agent.name }}</h1>
+    <p>Get instant answers powered by AI. Need a human? You can request one at any time during the conversation.</p>
+
+    <form method="post" action="{% url 'agent_chat_home' assistant_id %}">
+        {% csrf_token %}
+        <input type="hidden" name="name" value="New AI Conversation">
+        <button type="submit" class="btn-start">Start Conversation</button>
+    </form>
+</div>
+{% endblock %}
