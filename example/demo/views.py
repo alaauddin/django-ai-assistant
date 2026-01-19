@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
@@ -21,7 +22,7 @@ from django_ai_assistant.models import Thread, Agent
 
 from django.views.generic import ListView
 
-class AgentListView(ListView):
+class AgentListView(LoginRequiredMixin, ListView):
     model = Agent
     template_name = "demo/agent_list.html"
     context_object_name = "agents"
@@ -32,7 +33,7 @@ class AgentListView(ListView):
         return Agent.objects.all()
 
 
-class BaseAIAssistantView(TemplateView):
+class BaseAIAssistantView(LoginRequiredMixin, TemplateView):
     def get_assistant_id(self, **kwargs):
         """Returns the assistant_id from URL or defaults."""
         return self.kwargs.get("assistant_id")
@@ -60,8 +61,11 @@ class AIAssistantChatHomeView(BaseAIAssistantView):
     def post(self, request, *args, **kwargs):
         assistant_id = self.get_assistant_id()
         try:
-            thread_data = ThreadIn(**request.POST)
+            # We filter POST data to avoid validation errors with extra fields like csrfmiddlewaretoken
+            data = {k: v for k, v in request.POST.items() if k in ThreadIn.model_fields}
+            thread_data = ThreadIn(**data)
         except ValidationError:
+
             messages.error(request, "Invalid thread data")
             return redirect("chat_home", assistant_id=assistant_id)
 

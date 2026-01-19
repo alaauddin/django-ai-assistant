@@ -139,3 +139,57 @@ class Agent(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+
+class Category(models.Model):
+    agent = models.ForeignKey(Agent, on_delete=models.CASCADE, related_name="categories", null=True, blank=True)
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = "Categories"
+
+    def __str__(self):
+        return f"{self.agent.name} - {self.name}" if self.agent else self.name
+
+
+class FAQ(models.Model):
+    STATUS_CHOICES = (
+        ("draft", "Draft"),
+        ("published", "Published"),
+    )
+    agent = models.ForeignKey(Agent, on_delete=models.CASCADE, related_name="faqs", null=True, blank=True)
+    question = models.CharField(max_length=500)
+    answer = models.TextField()
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="draft")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "FAQ"
+        verbose_name_plural = "FAQs"
+
+    def __str__(self):
+        return self.question
+
+
+class Article(models.Model):
+    STATUS_CHOICES = (
+        ("draft", "Draft"),
+        ("published", "Published"),
+    )
+    agent = models.ForeignKey(Agent, on_delete=models.CASCADE, related_name="articles", null=True, blank=True)
+    title = models.CharField(max_length=255)
+    content = models.TextField()
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="draft")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title
+
+

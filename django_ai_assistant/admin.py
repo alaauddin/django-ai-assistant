@@ -56,3 +56,41 @@ class MessageAdmin(admin.ModelAdmin):
     search_fields = ("thread__name", "message")
     list_filter = ("created_at",)
     raw_id_fields = ("thread",)
+
+
+from django_ai_assistant.models import Agent, Category, FAQ, Article
+
+@admin.register(Agent)
+class AgentAdmin(admin.ModelAdmin):
+    list_display = ("name", "model", "temperature", "created_at", "updated_at")
+    search_fields = ("name", "description")
+    list_filter = ("created_at", "updated_at")
+    fieldsets = (
+        (None, {"fields": ("name", "description")}),
+        ("Configuration", {"fields": ("instructions", "model", "temperature")}),
+        ("Timestamps", {"fields": ("created_at", "updated_at"), "classes": ("collapse",)}),
+    )
+    readonly_fields = ("created_at", "updated_at")
+
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ("name", "agent", "created_at", "updated_at")
+    search_fields = ("name", "description")
+    list_filter = ("agent",)
+
+
+@admin.register(FAQ)
+class FAQAdmin(admin.ModelAdmin):
+    list_display = ("question", "agent", "category", "status", "updated_at")
+    search_fields = ("question", "answer")
+    list_filter = ("status", "agent", "category", "created_at")
+
+
+@admin.register(Article)
+class ArticleAdmin(admin.ModelAdmin):
+    list_display = ("title", "agent", "category", "status", "updated_at")
+    search_fields = ("title", "content")
+    list_filter = ("status", "agent", "category", "created_at")
+
+

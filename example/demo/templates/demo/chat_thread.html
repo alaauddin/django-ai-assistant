@@ -1,54 +1,44 @@
 {% extends "demo/chat_home.html" %}
 {% load markdown %}
 
-{% block message_list %}
-  <div id="messages-container" class="d-flex flex-column">
-    <!-- Django alert messages from django.contrib.messages: -->
-    {% if messages %}
-    <div class="alert-messages">
-        {% for message in messages %}
-        <div class="alert alert-warning">{{ message }}</div>
+{% block chat_area %}
+<div class="d-flex flex-column h-100">
+    <div class="chat-header p-3 border-bottom bg-white d-flex justify-content-between align-items-center">
+        <h5 class="m-0">{{ thread.name|default:"Untitled Conversation" }}</h5>
+        <span class="badge bg-secondary">{{ assistant_id }}</span>
+    </div>
+
+    <div class="chat-messages p-3" id="messages-list">
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-warning">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        {% for message in thread_messages %}
+            <div class="message {% if message.type == 'human' %}human{% else %}ai{% endif %}">
+                <strong>{% if message.type == 'human' %}You{% else %}{{ assistant_id|title }}{% endif %}</strong>
+                <div class="mt-1">
+                    {{ message.content|markdown }}
+                </div>
+            </div>
         {% endfor %}
     </div>
-    {% endif %}
 
-    <div id="messages-list" class="overflow-auto">
-      {% for message in thread_messages %}
-        <div class="d-flex flex-column p-2">
-          <span>
-            <strong>
-              {% if message.type == "ai" %}AI{% else %}User{% endif %}
-            </strong>
-          </span>
-          <span>{{ message.content|markdown }}</span>
-        </div>
-      {% endfor %}
+    <div class="chat-input p-3 border-top bg-white">
+        <form method="post" action="{% url 'chat_thread' assistant_id thread_id %}" class="d-flex gap-2">
+            {% csrf_token %}
+            <input type="text" name="content" class="form-control" placeholder="Type your message..." required autofocus autocomplete="off">
+            <button type="submit" class="btn btn-primary">Send</button>
+        </form>
     </div>
+</div>
 
-    <div class="text-center my-2" data-loading>
-      <div class="spinner-border text-primary" role="status"></div>
-    </div>
-
-    <div class="d-flex align-items-center mt-auto">
-      <textarea
-        id="input-area"
-        class="form-control"
-        placeholder="Enter user message… (Ctrl↵ to send)"
-        name="content"
-        data-loading-disable
-      ></textarea>
-      <button
-        id="send-message-button"
-        class="btn btn-primary ms-3 d-inline-flex align-items-center"
-        hx-post="{% url 'chat_thread' thread_id %}"
-        hx-include="#input-area"
-        hx-target="#messages-container"
-        hx-swap="outerHTML"
-        hx-select="#messages-container"
-        data-loading-disable
-      >
-        Send <i class="bi bi-send ms-2"></i>
-      </button>
-    </div>
-  </div>
+<script>
+    // Scroll to bottom of chat
+    const messageList = document.getElementById('messages-list');
+    if (messageList) {
+        messageList.scrollTop = messageList.scrollHeight;
+    }
+</script>
 {% endblock %}

@@ -1,55 +1,45 @@
-{% extends "demo/htmx_index.html" %}
+{% extends "demo/base.html" %}
 
-{% block body %}
-  <div class="d-flex vh-100">
-    <aside class="h-100 col-3 border-right p-3 bg-light">
-      <h3>Threads</h3>
-
-        <div id="threads-wrapper" hx-swap-oob="true">
-        {% block threads_list %}
-          <div id="threads-container" class="d-flex flex-column">
-            <div id="threads-list" class="list-group flex-grow-1 overflow-auto">
-              {% for thread in threads %}
-                <a
-                  class="thread-item list-group-item list-group-item-action {% if thread.id == thread_id %}active{% endif %}"
-                  href="{% url 'chat_thread' thread.id %}"
-                  hx-get="{% url 'chat_thread' thread.id %}"
-                  hx-target="#messages-wrapper"
-                  hx-select="#messages-wrapper"
-                  hx-push-url="true"
-                >
-                  {{ thread.name }}
-                </a>
-              {% endfor %}
-            </div>
-
-            <button
-              id="create-thread-button"
-              class="btn btn-primary mt-3"
-              hx-post='{% url "chat_home" %}'
-              hx-target="#threads-container"
-              hx-select="#messages-list"
-              hx-select-oob="#messages-list"
-              hx-push-url="true"
-              data-loading-disable
-            >
-              Create Thread
+{% block content %}
+<div class="row g-0 h-100">
+    <div class="col-md-3 sidebar p-3">
+        <h3 class="mb-3">
+            <a href="{% url 'agent_list' %}" class="text-decoration-none text-dark">&larr;</a>
+            Threads
+        </h3>
+        
+        <form method="post" action="{% url 'chat_home' assistant_id %}">
+            {% csrf_token %}
+            <input type="hidden" name="name" value="New Conversation">
+            <button type="submit" class="btn btn-primary w-100 mb-3">
+                + New Chat
             </button>
-          </div>
-        {% endblock %}
-      </div>
-    </aside>
+        </form>
 
-    <main class="h-100 col-9 d-flex flex-column p-3 mx-auto main-container">
-      <h2 class="mb-4">Chat</h2>
+        <div class="list-group">
+            {% for thread in threads %}
+            <a href="{% url 'chat_thread' assistant_id thread.id %}" 
+               class="list-group-item list-group-item-action {% if thread.id == thread_id %}active{% endif %}">
+                {{ thread.name|default:"Untitled Thread" }}
+                <small class="d-block text-muted">{{ thread.created_at|date:"M d, P" }}</small>
+            </a>
+            {% empty %}
+            <div class="text-muted text-center py-3">No threads yet.</div>
+            {% endfor %}
+        </div>
+    </div>
 
-      <div id="messages-wrapper"  hx-swap-oob="true">
-        {% block message_list %}
-          <div class="text-center text-muted my-3">
-            Select or create a thread to start chatting.
-          </div>
-        {% endblock %}
-      </div>
-    </main>
-  </div>
+    <div class="col-md-9 p-0">
+        <div class="chat-container h-100 rounded-0 shadow-none">
+            {% block chat_area %}
+            <div class="d-flex align-items-center justify-content-center h-100 bg-light">
+                <div class="text-center text-muted">
+                    <h3>Welcome to {{ assistant_id }}</h3>
+                    <p>Select a thread or start a new conversation.</p>
+                </div>
+            </div>
+            {% endblock %}
+        </div>
+    </div>
+</div>
 {% endblock %}
