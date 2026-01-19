@@ -5,8 +5,6 @@ from django.views import View
 from django.views.generic.base import TemplateView
 
 from pydantic import ValidationError
-from tour_guide.ai_assistants import TourGuideAIAssistant
-from weather.ai_assistants import WeatherAIAssistant
 
 from django_ai_assistant.api.schemas import (
     ThreadIn,
@@ -18,25 +16,38 @@ from django_ai_assistant.helpers.use_cases import (
     get_thread_messages,
     get_threads,
 )
-from django_ai_assistant.models import Thread
+from django_ai_assistant.models import Thread, Agent
 
 
-def react_index(request, **kwargs):
-    return render(request, "demo/react_index.html")
+from django.views.generic import ListView
+
+class AgentListView(ListView):
+    model = Agent
+    template_name = "demo/agent_list.html"
+    context_object_name = "agents"
+
+    def get_queryset(self):
+        # Ensure we return valid agents that are in the registry or DB
+        # For now, just all DB agents since we are moving to DB-first
+        return Agent.objects.all()
 
 
 class BaseAIAssistantView(TemplateView):
     def get_assistant_id(self, **kwargs):
-        """Returns the WeatherAIAssistant. Replace this with your own logic."""
-        return WeatherAIAssistant.id
+        """Returns the assistant_id from URL or defaults."""
+        return self.kwargs.get("assistant_id")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        threads = list(get_threads(user=self.request.user))
+        assistant_id = self.get_assistant_id(**kwargs)
+
+        # Filter threads by the current assistant if selected
+        threads = get_threads(user=self.request.user, assistant_id=assistant_id)
+        
         context.update(
             {
-                "assistant_id": self.get_assistant_id(**kwargs),
-                "threads": threads,
+                "assistant_id": assistant_id,
+                "threads": list(threads),  # Convert generator to list
             }
         )
         return context
@@ -47,18 +58,20 @@ class AIAssistantChatHomeView(BaseAIAssistantView):
 
     # POST to create thread:
     def post(self, request, *args, **kwargs):
+        assistant_id = self.get_assistant_id()
         try:
             thread_data = ThreadIn(**request.POST)
         except ValidationError:
             messages.error(request, "Invalid thread data")
-            return redirect("chat_home")
+            return redirect("chat_home", assistant_id=assistant_id)
 
         thread = create_thread(
             name=thread_data.name,
             user=request.user,
             request=request,
+            assistant_id=assistant_id,
         )
-        return redirect("chat_thread", thread_id=thread.id)
+        return redirect("chat_thread", assistant_id=assistant_id, thread_id=thread.id)
 
 
 class AIAssistantChatThreadView(BaseAIAssistantView):
@@ -68,7 +81,10 @@ class AIAssistantChatThreadView(BaseAIAssistantView):
         context = super().get_context_data(**kwargs)
         thread_id = self.kwargs["thread_id"]
         thread = get_object_or_404(Thread, id=thread_id)
-
+        
+        # Ensure the thread belongs to the current assistant context if we enforce that
+        # valid_assistant_id = thread.assistant_id
+        
         thread_messages = get_thread_messages(
             thread=thread,
             user=self.request.user,
@@ -78,6 +94,7 @@ class AIAssistantChatThreadView(BaseAIAssistantView):
             {
                 "thread_id": self.kwargs["thread_id"],
                 "thread_messages": thread_messages,
+                "thread": thread,
             }
         )
         return context
@@ -95,7 +112,7 @@ class AIAssistantChatThreadView(BaseAIAssistantView):
             )
         except ValidationError:
             messages.error(request, "Invalid message data")
-            return redirect("chat_thread", thread_id=thread_id)
+            return redirect("chat_thread", assistant_id=assistant_id, thread_id=thread_id)
 
         create_message(
             assistant_id=assistant_id,
@@ -104,19 +121,4 @@ class AIAssistantChatThreadView(BaseAIAssistantView):
             content=message.content,
             request=request,
         )
-        return redirect("chat_thread", thread_id=thread_id)
-
-
-class TourGuideAssistantView(View):
-    def get(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return JsonResponse({"error": "You must be logged in to use this feature."}, status=401)
-
-        coordinates = request.GET.get("coordinate")
-
-        if not coordinates:
-            return JsonResponse({})
-
-        a = TourGuideAIAssistant()
-        data = a.run(f"My coordinates are: ({coordinates})")
-        return JsonResponse(data.model_dump())
+        return redirect("chat_thread", assistant_id=assistant_id, thread_id=thread_id)

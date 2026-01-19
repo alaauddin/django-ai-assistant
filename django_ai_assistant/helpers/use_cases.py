@@ -39,9 +39,35 @@ def get_assistant_cls(
         AIAssistantNotDefinedError: If assistant with the given id is not found
         AIUserNotAllowedError: If user is not allowed to use the assistant
     """
-    if assistant_id not in AIAssistant.get_cls_registry():
-        raise AIAssistantNotDefinedError(f"Assistant with id={assistant_id} not found")
-    assistant_cls = AIAssistant.get_cls(assistant_id)
+    if assistant_id in AIAssistant.get_cls_registry():
+        assistant_cls = AIAssistant.get_cls(assistant_id)
+    else:
+        # Try to get from database
+        from django_ai_assistant.models import Agent
+
+        try:
+            agent = Agent.objects.get(name=assistant_id)
+        except Agent.DoesNotExist:
+             raise AIAssistantNotDefinedError(f"Assistant with id={assistant_id} not found")
+
+        # Create a dynamic class for the agent
+        # We use type() to create the class dynamically
+        # The class name is the capitalized assistant_id
+        class_name = "".join(x.capitalize() or "_" for x in assistant_id.split("_")) + "Assistant"
+        
+        attrs = {
+            "id": agent.name,
+            "name": agent.name,
+            "instructions": agent.instructions,
+            "model": agent.model,
+            "temperature": agent.temperature,
+            "__module__": "django_ai_assistant.dynamic_agents",  # Fake module to avoid pickling issues?
+        }
+        
+        # This triggers __init_subclass__ which registers the class
+        assistant_cls = type(class_name, (AIAssistant,), attrs)
+
+
     if not can_run_assistant(
         assistant_cls=assistant_cls,
         user=user,
@@ -91,8 +117,15 @@ def get_assistants_info(
     Returns:
         list[dict[str, str]]: List of dicts like `[{"id": "personal_ai", "name": "Personal AI"}, ...]`
     """
+    from django_ai_assistant.models import Agent
+
+    assistant_ids = set(AIAssistant.get_cls_registry().keys())
+    # Add DB agents
+    db_agent_ids = set(Agent.objects.values_list("name", flat=True))
+    assistant_ids.update(db_agent_ids)
+
     assistant_info_list = []
-    for assistant_id in AIAssistant.get_cls_registry().keys():
+    for assistant_id in assistant_ids:
         try:
             info = get_single_assistant_info(assistant_id, user, request)
             assistant_info_list.append(info)

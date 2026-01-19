@@ -1,0 +1,29 @@
+{% extends "demo/base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">Available Agents</h1>
+    <div class="row">
+        {% for agent in agents %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ agent.name }}</h5>
+                    <p class="card-text">{{ agent.description|default:"No description available." }}</p>
+                    <p class="card-text"><small class="text-muted">Model: {{ agent.model }}</small></p>
+                </div>
+                <div class="card-footer bg-transparent border-top-0">
+                    <a href="{% url 'chat_home' agent.name %}" class="btn btn-primary w-100">Chat</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info" role="alert">
+                No agents found. Please create one in the admin or via shell.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

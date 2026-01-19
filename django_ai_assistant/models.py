@@ -111,3 +111,31 @@ class Message(models.Model):
     def __repr__(self) -> str:
         """Return the string representation of the message like '<Message id at thread_id>'"""
         return f"<Message {self.id} at {self.thread_id}>"
+
+
+class Agent(models.Model):
+    """Agent model. An agent is a configuration for an AI assistant.
+    The agent configuration is stored in the database."""
+
+    id: Any  # noqa: A003
+    name = models.CharField(max_length=255, unique=True)
+    """Name of the agent. Must be unique."""
+    instructions = models.TextField()
+    """Instructions for the AI assistant knowing what to do. This is the LLM system prompt."""
+    model = models.CharField(max_length=255)
+    """LLM model name to use for the assistant."""
+    temperature = models.FloatField(default=1.0)
+    """Temperature to use for the assistant LLM model. Defaults to 1.0."""
+    description = models.TextField(blank=True)
+    """Description of the agent. Can be blank."""
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Agent"
+        verbose_name_plural = "Agents"
+        ordering = ("name",)
+
+    def __str__(self) -> str:
+        return self.name

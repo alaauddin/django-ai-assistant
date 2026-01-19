@@ -27,15 +27,14 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "webpack_loader",
     "django_ai_assistant",
     "demo",  # contains the views
-    "weather",
     "movies",
+
     "rag",
     "issue_tracker",
-    "tour_guide",
 ]
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -151,22 +150,11 @@ LOGGING = {
     },
 }
 
-# django-webpack-loader
-
-WEBPACK_LOADER = {
-    "DEFAULT": {
-        "BUNDLE_DIR_NAME": "webpack_bundles/",
-        "CACHE": not DEBUG,
-        "STATS_FILE": BASE_DIR / "webpack-stats.json",
-        "POLL_INTERVAL": 0.1,
-        "IGNORE": [r".+\.hot-update.js", r".+\.map"],
-    }
-}
-
 
 # django-ai-assistant
 
 AI_ASSISTANT_INIT_API_FN = "django_ai_assistant.api.views.init_api"
+
 AI_ASSISTANT_CAN_CREATE_THREAD_FN = "django_ai_assistant.permissions.allow_all"
 AI_ASSISTANT_CAN_VIEW_THREAD_FN = "django_ai_assistant.permissions.owns_thread"
 AI_ASSISTANT_CAN_UPDATE_THREAD_FN = "django_ai_assistant.permissions.owns_thread"
